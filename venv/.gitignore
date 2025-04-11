@@ -1,0 +1,24 @@
+# created by virtualenv automatically
+*# Ігноруємо директорії даних
+data/
+
+# Ігноруємо файли, що генеруються при виконанні скриптів (якщо вони великі)
+*.csv
+*.log
+
+# Ігноруємо середовище virtualenv
+venv/
+.env/
+
+# Ігноруємо файли IDE (наприклад, PyCharm)
+.idea/
+
+# Ігноруємо файли системи
+.DS_Store
+Thumbs.db
+
+# Ігноруємо налаштування Python
+*.pyc
+*.pyo
+__pycache__/
+
