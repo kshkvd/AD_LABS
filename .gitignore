@@ -1,0 +1,12 @@
+# PyCharm settings
+.idea/
+
+# Virtual environment
+venv/
+
+# Byte-compiled files
+__pycache__/
+*.pyc
+
+# Data
+data/final_vhi_data.csv
