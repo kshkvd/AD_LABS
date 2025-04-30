@@ -9,4 +9,4 @@ __pycache__/
 *.pyc
 
 # Data
-data/final_vhi_data.csv
+final_vhi_data.csv

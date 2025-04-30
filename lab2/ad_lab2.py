@@ -18,17 +18,20 @@ def download_vhi_data(region_id):
     filename = f"NOAA_ID{region_id}_{now}.csv"
     filepath = os.path.join(DATA_DIR, filename)
 
-    url = f"{BASE_URL}?country=UKR&provinceID={region_id}&year1=1981&year2=2024&type=Mean"
-    try:
-        with urllib.request.urlopen(url) as response:
-            data = response.read()
+    if not os.path.exists(filepath):
+        url = f"{BASE_URL}?country=UKR&provinceID={region_id}&year1=1981&year2=2024&type=Mean"
+        try:
+            with urllib.request.urlopen(url) as response:
+                data = response.read()
 
-        with open(filepath, 'wb') as file:
-            file.write(data)
+            with open(filepath, 'wb') as file:
+                file.write(data)
 
-        print(f"[OK] Дані для області {region_id} збережено як {filename}")
-    except Exception as e:
-        print(f"[ERR] Помилка при завантаженні для області {region_id}: {e}")
+            print(f"[OK] Дані для області {region_id} збережено як {filename}")
+        except Exception as e:
+            print(f"[ERR] Помилка при завантаженні для області {region_id}: {e}")
+    else:
+        print(f"[INFO] Файл для області {region_id} вже існує: {filename}. Пропущено завантаження.")
 
 # === 3. Зчитування всіх CSV у один DataFrame ===
 def read_all_data(directory):
@@ -104,9 +107,15 @@ def detect_droughts(df, min_regions=5):
 if __name__ == "__main__":
     create_data_directory()
 
-    print("Завантаження даних для всіх областей...")
-    for i in range(1, 26):
-        download_vhi_data(i)
+    # Перевіряємо, чи є вже файли в директорії
+    existing_files = [f for f in os.listdir(DATA_DIR) if f.startswith("NOAA_ID") and f.endswith('.csv')]
+
+    if not existing_files:
+        print("Завантаження даних для всіх областей...")
+        for i in range(1, 26):
+            download_vhi_data(i)
+    else:
+        print("Файли з даними вже існують. Пропущено завантаження.")
 
     print("\nОбробка збережених файлів...")
     df = read_all_data(DATA_DIR)
