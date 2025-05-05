@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # === Завантаження даних ===
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/final_vhi_data.csv")
+    df = pd.read_csv("lab2/data/final_vhi_data.csv")
     return df
 
 df = load_data()
