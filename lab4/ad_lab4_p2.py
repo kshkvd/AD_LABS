@@ -16,7 +16,7 @@ save_figures = False  # Змінити на True, якщо хочу зберег
 os.makedirs("plots", exist_ok=True)
 
 # --- КРОК 1: Завантаження даних ---
-df = pd.read_csv("C:/Users/Dasha Koshykova/PycharmProjects/pythonProject5/data/train.csv")
+df = pd.read_csv("C:/Users/Dasha Koshykova/PycharmProjects/pythonProject5/lab2/data/train.csv")
 
 # --- КРОК 2: Огляд даних ---
 print(df.head())
