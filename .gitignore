@@ -10,3 +10,4 @@ __pycache__/
 
 # Data
 final_vhi_data.csv
+*.txt
