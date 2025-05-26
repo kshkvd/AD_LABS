@@ -30,25 +30,21 @@ init_frequency = 1.0
 init_phase = 0.0
 init_noise_mean = 0.0
 init_noise_covariance = 0.1
-init_cutoff = 2.0  # для фільтру
+init_cutoff = 2.0
 
 # Масив часу
 t = np.linspace(0, 10, 1000)
-fs = len(t) / (t[-1] - t[0])  # sampling frequency
+fs = len(t) / (t[-1] - t[0])
 
-# Поточний шум
-current_noise = None
+# Зберігаємо фіксований шум
+current_noise = np.random.normal(init_noise_mean, np.sqrt(init_noise_covariance), size=len(t))
 
-# ---------------------------
-# Створюємо початкові дані
-# ---------------------------
-y_clean, y_noisy, current_noise = harmonic_with_noise(
-    t, init_amplitude, init_frequency, init_phase, init_noise_mean, init_noise_covariance
-)
+# Початкові сигнали
+y_clean, y_noisy, _ = harmonic_with_noise(t, init_amplitude, init_frequency, init_phase, init_noise_mean, init_noise_covariance, noise=current_noise)
 y_filtered = apply_filter(y_noisy, cutoff=init_cutoff, fs=fs)
 
 # ---------------------------
-# Створюємо фігуру та графік
+# Графік
 # ---------------------------
 fig, ax = plt.subplots()
 plt.subplots_adjust(left=0.1, bottom=0.5)
@@ -86,75 +82,72 @@ reset_ax = plt.axes([0.65, 0.92, 0.1, 0.04])
 button = Button(reset_ax, 'Reset')
 
 # ---------------------------
-# Функція оновлення графіка
+# Зберігаємо поточні значення шуму
+# ---------------------------
+prev_noise_mean = init_noise_mean
+prev_noise_cov = init_noise_covariance
+
+# ---------------------------
+# Функція оновлення
 # ---------------------------
 def update(val):
-    global current_noise
+    global current_noise, prev_noise_mean, prev_noise_cov
+
     amplitude = amp_slider.val
     frequency = freq_slider.val
     phase = phase_slider.val
     noise_mean = mean_slider.val
-    noise_covariance = cov_slider.val
+    noise_cov = cov_slider.val
     cutoff = cutoff_slider.val
     show_noise = check.get_status()[0]
     apply_filter_flag = check.get_status()[1]
 
-    # Перевірка, чи змінено шум
-    noise_changed = (
-        noise_mean != update.prev_noise_mean or
-        noise_covariance != update.prev_noise_covariance
-    )
-
-    if noise_changed:
-        _, y_noisy, current_noise = harmonic_with_noise(t, amplitude, frequency, phase, noise_mean, noise_covariance)
-        update.prev_noise_mean = noise_mean
-        update.prev_noise_covariance = noise_covariance
-    else:
-        _, y_noisy, _ = harmonic_with_noise(t, amplitude, frequency, phase, noise_mean, noise_covariance, noise=current_noise)
+    # Генеруємо новий шум, якщо змінилися параметри шуму
+    if noise_mean != prev_noise_mean or noise_cov != prev_noise_cov:
+        current_noise = np.random.normal(noise_mean, np.sqrt(noise_cov), size=len(t))
+        prev_noise_mean = noise_mean
+        prev_noise_cov = noise_cov
 
     y_clean = amplitude * np.sin(2 * np.pi * frequency * t + phase)
+    y_noisy = y_clean + current_noise
     y_filtered = apply_filter(y_noisy, cutoff=cutoff, fs=fs) if apply_filter_flag else y_noisy
 
     line_clean.set_ydata(y_clean)
+    line_noisy.set_ydata(y_noisy)
+    line_noisy.set_visible(show_noise)
+
     line_filtered.set_ydata(y_filtered)
     line_filtered.set_visible(apply_filter_flag)
 
-    if show_noise:
-        line_noisy.set_ydata(y_noisy)
-        line_noisy.set_visible(True)
-    else:
-        line_noisy.set_visible(False)
-
     fig.canvas.draw_idle()
 
-# Зберігаємо попередні значення шуму
-update.prev_noise_mean = init_noise_mean
-update.prev_noise_covariance = init_noise_covariance
-
 # ---------------------------
-# Події
+# Reset
 # ---------------------------
-for slider in [amp_slider, freq_slider, phase_slider, mean_slider, cov_slider, cutoff_slider]:
-    slider.on_changed(update)
-check.on_clicked(update)
-button.on_clicked(lambda event: reset())
-
-# ---------------------------
-# Функція Reset
-# ---------------------------
-def reset():
+def reset(event=None):
+    global current_noise, prev_noise_mean, prev_noise_cov
     amp_slider.reset()
     freq_slider.reset()
     phase_slider.reset()
     mean_slider.reset()
     cov_slider.reset()
     cutoff_slider.reset()
-    # Установлюємо активні чекбокси: Show Noise + Apply Filter
+    # Увімкнення обох чекбоксів
     if not check.get_status()[0]: check.set_active(0)
     if not check.get_status()[1]: check.set_active(1)
-    update.prev_noise_mean = init_noise_mean
-    update.prev_noise_covariance = init_noise_covariance
+    # Скидання шуму
+    prev_noise_mean = init_noise_mean
+    prev_noise_cov = init_noise_covariance
+    current_noise = np.random.normal(prev_noise_mean, np.sqrt(prev_noise_cov), size=len(t))
     update(None)
+
+# ---------------------------
+# Події
+# ---------------------------
+for s in [amp_slider, freq_slider, phase_slider, mean_slider, cov_slider, cutoff_slider]:
+    s.on_changed(update)
+check.on_clicked(update)
+button.on_clicked(reset)
 
 # ---------------------------
 # Інструкції
